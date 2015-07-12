@@ -9,6 +9,7 @@
 
 #include "Core/FileIO/FileIO.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Tracing/Tracing.h"
 
 
 // EnsureFileDoesNotExist
@@ -73,12 +74,23 @@ void FBuildTest::GetCodeDir( AString & codeDir ) const
 	// we want the working dir to be the 'Code' directory
 	TEST_ASSERT( FileIO::GetCurrentDir( codeDir ) );
     #if defined( __WINDOWS__ )
-        const char * codePos = codeDir.FindI( "\\code\\" );
+    const char codeDirPath[] = "\\code\\";
     #else
-        const char * codePos = codeDir.FindI( "/code/" );
+    const char codeDirPath[] = "/code/";
     #endif
+    const char * const codeStart = codeDir.Get();
+    const char * codePos = nullptr;
+	for ( const char * codeIt = codeDir.GetEnd() ; codeIt != codeStart ; --codeIt )
+	{
+		if ( *codeIt == codeDirPath[0] &&
+			 AString::StrNCmpI( codeIt, codeDirPath, sizeof( codeDirPath ) - 1 ) == 0 )
+		{
+			codePos = codeIt;
+			break;
+		}
+	}
 	TEST_ASSERT( codePos );
-	codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + 6 ) );
+	codeDir.SetLength( (uint16_t)( codePos - codeDir.Get() + sizeof( codeDirPath ) - 1 ) );
 }
 
 //------------------------------------------------------------------------------
