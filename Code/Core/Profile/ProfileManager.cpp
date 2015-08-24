@@ -18,6 +18,8 @@
 #include "Core/Time/Timer.h"
 #include "Core/Tracing/Tracing.h"
 
+#include <cstdlib>
+
 // Static Data
 //------------------------------------------------------------------------------
 /*static*/ Array< ProfileManager::ProfileEventInfo > ProfileManager::s_ProfileEventInfo( 0, true );
@@ -129,7 +131,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
 	}
 
 	// allocate a fresh block
-	events = FNEW_ARRAY( ProfileEvent[ NUM_EVENTS_PER_BLOCK ] );
+	events = ( ProfileEvent * )::calloc( NUM_EVENTS_PER_BLOCK, sizeof(ProfileEvent) );
 	m_Begin = events;
 	m_Current = events;
 	m_MaxEnd = events + NUM_EVENTS_PER_BLOCK;
@@ -228,7 +230,7 @@ ProfileEvent * ProfileEventBuffer::AllocateEventStorage()
                 g_ProfileEventLog.WriteBuffer( buffer.Get(), buffer.GetLength() );
             }
 		}
-		FDELETE [] info.m_Events;
+		::free( ( void * ) info.m_Events );
 	}
 }
 
