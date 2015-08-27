@@ -72,10 +72,10 @@ BFFVariable::BFFVariable( const AString & name, const AString & value )
 , m_Frozen( false )
 , m_StringValue( value )
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
+, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
 , m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, false )
+, m_ArrayOfStructs( 0, true )
 {
 }
 
@@ -87,10 +87,10 @@ BFFVariable::BFFVariable( const AString & name, bool value )
 , m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( value )
-, m_ArrayValues( 0, false )
+, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
-, m_StructMembers( 0, false )
-, m_ArrayOfStructs( 0, false )
+, m_StructMembers( 0, true )
+, m_ArrayOfStructs( 0, true )
 {
 }
 
@@ -104,8 +104,8 @@ BFFVariable::BFFVariable( const AString & name, const Array< AString > & values 
 , m_BoolValue( false )
 , m_ArrayValues( 0, true )
 , m_IntValue( 0 )
-, m_StructMembers( 0, false )
-, m_ArrayOfStructs( 0, false )
+, m_StructMembers( 0, true )
+, m_ArrayOfStructs( 0, true )
 {
 	m_ArrayValues = values;
 }
@@ -121,7 +121,7 @@ BFFVariable::BFFVariable( const AString & name, int i )
 , m_ArrayValues( 0, true )
 , m_IntValue( i )
 , m_StructMembers( 0, true )
-, m_ArrayOfStructs( 0, false )
+, m_ArrayOfStructs( 0, true )
 {
 }
 
@@ -133,27 +133,27 @@ BFFVariable::BFFVariable( const AString & name, const Array< const BFFVariable *
 , m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
+, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
 , m_StructMembers( values.GetSize(), true )
-, m_ArrayOfStructs( 0, false )
+, m_ArrayOfStructs( 0, true )
 {
 	SetValueStruct( values );
 }
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
-BFFVariable::BFFVariable( const AString & name, 
-						  const Array< const BFFVariable * > & structs, 
+BFFVariable::BFFVariable( const AString & name,
+						  const Array< const BFFVariable * > & structs,
 						  VarType type ) // type for disambiguation
 : m_Name( name )
 , m_Type( VAR_ARRAY_OF_STRUCTS )
 , m_Frozen( false )
 //, m_StringValue() // default construct this
 , m_BoolValue( false )
-, m_ArrayValues( 0, false )
+, m_ArrayValues( 0, true )
 , m_IntValue( 0 )
-, m_StructMembers( 0, false )
+, m_StructMembers( 0, true )
 , m_ArrayOfStructs( structs.GetSize(), true )
 {
 	// type for disambiguation only - sanity check it's the right type
@@ -405,7 +405,7 @@ BFFVariable * BFFVariable::ConcatVarsRecurse( const AString & dstName, const BFF
         if ( srcType == BFFVariable::VAR_STRUCT )
         {
             const Array< const BFFVariable * > & srcMembers = varSrc->GetStructMembers();
-            // set all the variable in 
+            // set all the variable in
             const Array< const BFFVariable * > & dstMembers = varDst->GetStructMembers();
 
             BFFVariable * const result = FNEW( BFFVariable( dstName, BFFVariable::VAR_STRUCT ) );
