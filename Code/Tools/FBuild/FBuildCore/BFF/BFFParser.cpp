@@ -1466,6 +1466,35 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 			return true;
 		}
 
+		// Struct to empty ArrayOfStrings
+		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+			 ( srcType == BFFVariable::VAR_STRUCT ) )
+		{
+			// supports promotion of empty array of strings to an empty array of structs due to the syntax ambiguity around '{}'
+			if ( varDst->GetArrayOfStrings().GetSize() == 0 )
+			{
+				Array< const BFFVariable * > values( 1, false );
+				values.Append( varSrc );
+
+				BFFStackFrame::SetVarArrayOfStructs( dstName, values, dstFrame );
+				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u element", dstName.Get(), 1 );
+				return true;
+			}
+		}
+
+		// ArrayOfStructs to empty ArrayOfStrings
+		if ( ( dstType == BFFVariable::VAR_ARRAY_OF_STRINGS ) &&
+			 ( srcType == BFFVariable::VAR_ARRAY_OF_STRUCTS ) )
+		{
+			// supports promotion of empty array of strings to an empty array of structs due to the syntax ambiguity around '{}'
+			if ( varDst->GetArrayOfStrings().GetSize() == 0 )
+			{
+				BFFStackFrame::SetVarArrayOfStructs( dstName, varSrc->GetArrayOfStructs(), dstFrame );
+				FLOG_INFO( "Registered <ArrayOfStructs> variable '%s' with %u elements", dstName.Get(), varSrc->GetArrayOfStructs().GetSize() );
+				return true;
+			}
+		}
+
 	}
 	else
 	{
