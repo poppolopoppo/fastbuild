@@ -2439,8 +2439,7 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     // output any errors (even if succeeded, there might be warnings)
     if ( m_HandleOutput && m_Err.Get() )
     {
-        const bool treatAsWarnings = true; // change msg formatting
-        DumpOutput( job, m_Err.Get(), m_ErrSize, name, treatAsWarnings );
+        DumpOutput( job, m_Err.Get(), m_ErrSize, name, WARNINGS );
     }
 
     // failed?
@@ -2449,12 +2448,16 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
         // output 'stdout' which may contain errors for some compilers
         if ( m_HandleOutput )
         {
-            DumpOutput( job, m_Out.Get(), m_OutSize, name );
+            DumpOutput( job, m_Out.Get(), m_OutSize, name, ERRORS );
         }
 
         job->Error( "Failed to build Object. Error: %s Target: '%s'\n", ERROR_STR( m_Result ), name.Get() );
 
         return false;
+    }
+    else if ( m_HandleOutput && FLog::ShowBuildOutput() )
+    {
+        DumpOutput( job, m_Out.Get(), m_OutSize, name, INFOS );
     }
 
     return true;

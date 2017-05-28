@@ -37,6 +37,7 @@
 //------------------------------------------------------------------------------
 /*static*/ bool FLog::s_ShowInfo = false;
 /*static*/ bool FLog::s_ShowBuildCommands = true;
+/*static*/ bool FLog::s_ShowBuildOutput = false;
 /*static*/ bool FLog::s_ShowErrors = true;
 /*static*/ bool FLog::s_ShowProgress = false;
 /*static*/ bool FLog::s_MonitorEnabled = false;

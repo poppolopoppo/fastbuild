@@ -80,6 +80,7 @@ class FLog
 public:
     inline static bool ShowInfo() { return s_ShowInfo; }
     inline static bool ShowBuildCommands() { return s_ShowBuildCommands; }
+    inline static bool ShowBuildOutput() { return s_ShowBuildOutput; }
     inline static bool ShowErrors() { return s_ShowErrors; }
     inline static bool IsMonitorEnabled() { return s_MonitorEnabled; }
 
@@ -103,6 +104,7 @@ private:
     friend class FBuild;
     static inline void SetShowInfo( bool showInfo ) { s_ShowInfo = showInfo; }
     static inline void SetShowBuildCommands( bool showBuildCommands ) { s_ShowBuildCommands = showBuildCommands;}
+    static inline void SetShowBuildOutput( bool showBuildOutput ) { s_ShowBuildOutput = showBuildOutput; }
     static inline void SetShowErrors( bool showErrors ) { s_ShowErrors = showErrors; }
     static inline void SetShowProgress( bool showProgress ) { s_ShowProgress = showProgress; }
     static inline void SetMonitorEnabled( bool enabled ) { s_MonitorEnabled = enabled; }
@@ -113,6 +115,7 @@ private:
 
     static bool s_ShowInfo;
     static bool s_ShowBuildCommands;
+    static bool s_ShowBuildOutput;
     static bool s_ShowErrors;
     static bool s_ShowProgress;
     static bool s_MonitorEnabled;

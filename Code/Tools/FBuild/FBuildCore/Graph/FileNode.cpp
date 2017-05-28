@@ -63,8 +63,7 @@ void FileNode::HandleWarningsMSVC( Job * job, const AString & name, const char *
     // Are there any warnings? (string is ok even in non-English)
     if ( strstr( data, ": warning " ) )
     {
-        const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+        DumpOutput( job, data, dataSize, name, WARNINGS );
     }
 }
 
@@ -80,23 +79,40 @@ void FileNode::HandleWarningsClangGCC( Job * job, const AString & name, const ch
     // Are there any warnings? (string is ok even in non-English)
     if ( strstr( data, "warning: " ) )
     {
-        const bool treatAsWarnings = true;
-        DumpOutput( job, data, dataSize, name, treatAsWarnings );
+        DumpOutput( job, data, dataSize, name, WARNINGS );
     }
 }
 
 // DumpOutput
 //------------------------------------------------------------------------------
-void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings )
+void FileNode::DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, OutputLevel severity )
 {
     if ( ( data != nullptr ) && ( dataSize > 0 ) )
     {
         Array< AString > exclusions( 2, false );
-        exclusions.Append( AString( "Note: including file:" ) );
         exclusions.Append( AString( "#line" ) );
+        if ( FLog::ShowBuildOutput() == false )
+        {
+            exclusions.Append( AString( "Note: including file:" ) );
+        }
+
+        const char* severityStr;
+        if ( severity == INFOS )
+        {
+            severityStr = "INFO";
+        }
+        else if ( severity == WARNINGS )
+        {
+            severityStr = "WARNING";
+        }
+        else
+        {
+            ASSERT( severity == ERRORS );
+            severityStr = "PROBLEM";
+        }
 
         AStackString<> msg;
-        msg.Format( "%s: %s\n", treatAsWarnings ? "WARNING" : "PROBLEM", name.Get() );
+        msg.Format( "%s: %s\n", severityStr, name.Get() );
 
         AutoPtr< char > mem( (char *)ALLOC( dataSize + msg.GetLength() ) );
         memcpy( mem.Get(), msg.Get(), msg.GetLength() );

@@ -76,6 +76,7 @@ public:
     bool        m_ShowInfo                          = false;
     bool        m_ShowCommandLines                  = false;
     bool        m_ShowBuildCommands                 = true;
+    bool        m_ShowBuildOutput                   = false;
     bool        m_ShowErrors                        = true;
     bool        m_ShowProgress                      = false;
     bool        m_ShowSummary                       = false;

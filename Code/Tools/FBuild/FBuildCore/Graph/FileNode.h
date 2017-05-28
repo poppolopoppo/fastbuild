@@ -25,7 +25,14 @@ protected:
     friend class ObjectNode;
     virtual BuildResult DoBuild( Job * job ) override;
 
-    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, bool treatAsWarnings = false );
+    enum OutputLevel : uint8_t
+    {
+        INFOS       = 0,
+        WARNINGS    = 1,
+        ERRORS      = 2,
+    };
+
+    static void DumpOutput( Job * job, const char * data, uint32_t dataSize, const AString & name, OutputLevel severity = ERRORS );
 
     friend class Client;
 };

@@ -76,6 +76,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_ContinueAfterDBMove = true;
                 continue;
             }
+            else if ( thisArg == "-buildlog" )
+            {
+                m_ShowBuildOutput = true;
+                continue;
+            }
             else if ( thisArg == "-cache" )
             {
                 m_UseCacheRead = true;
@@ -483,6 +488,7 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "Usage: %s [options] [target1]..[targetn]\n", programName.Get() );
     OUTPUT( "----------------------------------------------------------------------\n"
             "Options:\n"
+            " -buildlog      Display all output of tasks, even when there's no warning/error.\n"
             " -cache[read|write] Control use of the build cache.\n"
             " -cacheinfo     Output cache statistics.\n"
             " -cachetrim [size] Trim the cache to the given size in MiB.\n"
