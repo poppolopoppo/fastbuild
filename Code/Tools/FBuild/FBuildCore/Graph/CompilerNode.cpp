@@ -146,7 +146,7 @@ CompilerNode::CompilerNode()
 bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Function * function )
 {
     // Handle auto-detect
-    if ( m_CompilerFamilyString.EqualsI( "auto" ) )
+    if ( m_CompilerFamilyString.EqualsI( "auto" ) || m_CompilerFamilyString.EqualsI( "auto_custom" ) )
     {
         // Normalize slashes to make logic consistent on all platforms
         AStackString<> compiler( GetExecutable() );
@@ -253,9 +253,19 @@ bool CompilerNode::InitializeCompilerFamily( const BFFIterator & iter, const Fun
             return true;
         }
 
-        // Auto-detect failed
-        Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
-        return false;
+        // Fails when using "auto", but fallback on custom if using "auto_custom"
+        if ( m_CompilerFamilyString.EqualsI( "auto_custom" ) )
+        {
+            // Won't fail for generated compiler nodes
+            m_CompilerFamilyEnum = CUSTOM;
+            return true;
+        }
+        else
+        {
+            // Auto-detect failed
+            Error::Error_1500_CompilerDetectionFailed( iter, function, compiler );
+            return false;
+        }
     }
 
     // Handle explicitly set compiler types

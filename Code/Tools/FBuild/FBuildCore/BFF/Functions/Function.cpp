@@ -545,7 +545,7 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
 {
     Node * cn = nodeGraph.FindNodeExact( compiler );
     compilerNode = nullptr;
-    if ( cn != nullptr )
+    if ( cn != nullptr && cn->GetType() != Node::FILE_NODE )
     {
         // Handle resolving to a file which might be created by an implicit compiler
         if ( cn->GetType() == Node::FILE_NODE )
@@ -593,6 +593,10 @@ bool Function::GetNodeList( NodeGraph & nodeGraph, const BFFIterator & iter, con
         compilerNode = nodeGraph.CreateCompilerNode( nodeName );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "Executable", compiler ) );
         VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "AllowDistribution", false ) );
+        {
+            AStackString<> compilerFamily( "auto_custom" ); // will try to detect compiler family, but will fallback on custom and won't fail if unkown
+            VERIFY( compilerNode->GetReflectionInfoV()->SetProperty( compilerNode, "CompilerFamily", compilerFamily ) );
+        }
         const char * lastSlash = compiler.FindLast( NATIVE_SLASH );
         if (lastSlash)
         {
