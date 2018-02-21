@@ -10,21 +10,18 @@
 
 REM ***** %~dp0SDK
 @SET EXTERNAL_SDK=%~dp0SDK
-rmdir /S "%EXTERNAL_SDK%"
-mkdir "%EXTERNAL_SDK%"
 
 REM ***** Visual Studio
-mklink /j "%EXTERNAL_SDK%\VS11.0" "%VS110%"
-mklink /j "%EXTERNAL_SDK%\VS12.0" "%VS110%"
-mklink /j "%EXTERNAL_SDK%\VS13.4" "%VS134%"
-mklink /j "%EXTERNAL_SDK%\VS15.0" "%VS150%"
+mklink /j "%EXTERNAL_SDK%\VisualStudio\2010" "%VS110%"
+mklink /j "%EXTERNAL_SDK%\VisualStudio\2013" "%VS110%"
+mklink /j "%EXTERNAL_SDK%\VisualStudio\2015" "%VS134%"
+mklink /j "%EXTERNAL_SDK%\VisualStudio\2017" "%VS150%"
 
 REM ***** Windows SDK
-mklink /j "%EXTERNAL_SDK%\Windows8.0" "%WINDOWS_SDK%\8.0"
-mklink /j "%EXTERNAL_SDK%\Windows8.1" "%WINDOWS_SDK%\8.1"
-mklink /j "%EXTERNAL_SDK%\Windows10"  "%WINDOWS_SDK%\10"
+mklink /j "%EXTERNAL_SDK%\Windows\8.0" "%WINDOWS_SDK%\8.0"
+mklink /j "%EXTERNAL_SDK%\Windows\8.1" "%WINDOWS_SDK%\8.1"
+mklink /j "%EXTERNAL_SDK%\Windows\10"  "%WINDOWS_SDK%\10"
 
 REM ***** CLANG/LLVM
-@mkdir "%EXTERNAL_SDK%\ClangForWindows"
 mklink /j "%EXTERNAL_SDK%\ClangForWindows\3.4" "%CLANG%"
 mklink /j "%EXTERNAL_SDK%\ClangForWindows\3.8" "%CLANG%"
