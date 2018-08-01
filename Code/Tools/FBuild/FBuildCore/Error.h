@@ -104,6 +104,7 @@ public:
     static void Error_1041_ElseWithoutIf( const BFFIterator & iter );
     static void Error_1042_UnknownOperator(const BFFIterator & iter, const AString & operatorName );
     static void Error_1043_CyclicDependencyDetected( const BFFIterator & iter, const AString & nodeName );
+    static void Error_1044_InvalidVariableSubstitutionOperator( const BFFIterator & iter, const AString & operatorStr );
 
     // 1050 - 1099 : Variable type errors
     //------------------------------------------------------------------------------

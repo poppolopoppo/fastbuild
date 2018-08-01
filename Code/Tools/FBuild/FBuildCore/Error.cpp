@@ -379,6 +379,13 @@
     FormatError( iter, 1043u, nullptr, "Cyclic dependency detected for node '%s'.", nodeName.Get() );
 }
 
+// Error_1044_PropertyMustBeString
+//------------------------------------------------------------------------------
+/*static*/ void Error::Error_1044_InvalidVariableSubstitutionOperator( const BFFIterator & iter, const AString & operatorStr )
+{
+    FormatError( iter, 1044u, nullptr, "Invalid variable substitution operator '%s'.", operatorStr.Get() );
+}
+
 // Error_1050_PropertyMustBeString
 //------------------------------------------------------------------------------
 /*static*/ void Error::Error_1050_PropertyMustBeOfType( const BFFIterator & iter,

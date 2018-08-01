@@ -1991,14 +1991,27 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 // find matching $
                 BFFIterator startName( src );
                 const char * endName = nullptr;
+                const char * endSubst = nullptr;
                 while ( src < end )
                 {
                     if ( *src == '$' )
                     {
-                        endName = src.GetCurrent();
+                        endSubst = src.GetCurrent();
                         break;
                     }
+                    else if ( *src == '/' )
+                    {
+                        if ( endName != nullptr )
+                        {
+                            endName = src.GetCurrent();
+                        }
+                    }
                     src++;
+                }
+                if ( endName == nullptr )
+                {
+                    ASSERT( endSubst );
+                    endName = endSubst;
                 }
                 if ( ( endName == nullptr ) ||
                      ( ( endName - startName.GetCurrent() ) < 1 ) )
@@ -2015,15 +2028,66 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
                 }
                 if ( var->IsBool() == true )
                 {
+                    if ( endSubst != endName )
+                    {
+                        ASSERT( endSubst > endName );
+                        AStackString< 32 > operatorStr( endName, endSubst );
+                        Error::Error_1044_InvalidVariableSubstitutionOperator( startName, operatorStr );
+                        return false;
+                    }
+
                     output += ( ( var->GetBool() ) ? "true" : "false" );
                 }
                 else if ( var->IsInt() == true )
                 {
+                    if ( endSubst != endName )
+                    {
+                        ASSERT( endSubst > endName );
+                        AStackString< 32 > operatorStr( endName, endSubst );
+                        Error::Error_1044_InvalidVariableSubstitutionOperator( startName, operatorStr );
+                        return false;
+                    }
+
                     output.AppendFormat( "%i", var->GetInt() );
                 }
                 else if ( var->IsString() == true )
                 {
+                    if ( endSubst != endName )
+                    {
+                        ASSERT( endSubst > endName );
+                        AStackString< 32 > operatorStr( endName, endSubst );
+                        Error::Error_1044_InvalidVariableSubstitutionOperator( startName, operatorStr );
+                        return false;
+                    }
+
                     output += var->GetString();
+                }
+                else if ( var->IsArrayOfStrings() == true && endName != endSubst )
+                {
+                    AStackString< 32 > operatorStr( endName, endSubst );
+
+                    if ( operatorStr.BeginsWith( "/join:" ) )
+                    {
+                        AStackString< 32 > separatorStr( endName + 6, endSubst );
+
+                        const auto& strings = var->GetArrayOfStrings();
+                        const size_t numStrings = strings.GetSize();
+                        for ( size_t i = 0 ; i < numStrings ; ++i )
+                        {
+                            if ( i != 0 )
+                            {
+                                output += separatorStr;
+                            }
+
+                            output += strings[i];
+                        }
+                    }
+                    else
+                    {
+                        // TODO:C add other substitution operators ?
+                        Error::Error_1044_InvalidVariableSubstitutionOperator( startName, operatorStr );
+                        return false;
+                    }
                 }
                 else
                 {
