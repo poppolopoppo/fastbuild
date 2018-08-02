@@ -277,7 +277,8 @@ bool FunctionIf::HandleSimpleCompare( NodeGraph & nodeGraph,
 const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
 {
     if ( ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL ) &&
-         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) )
+         ( *pos != BFFParser::BFF_DECLARE_VAR_PARENT ) &&
+         ( *pos != BFFParser::BFF_DECLARE_VAR_GLOBAL ) )
     {
         Error::Error_1200_ExpectedVar( pos, this );
         return nullptr;
@@ -285,21 +286,16 @@ const BFFVariable * FunctionIf::GetVar( BFFIterator & pos ) const
 
     const BFFIterator varNameBegin( pos );
     AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
-    bool varParentScope = false;
-    if ( BFFParser::ParseVariableName( pos, varName, varParentScope ) == false )
+    BFFVariable::EScope varScope = BFFStackFrame::SCOPE_INTERNAL;
+    if ( BFFParser::ParseVariableName( pos, varName, varScope ) == false )
     {
         return nullptr; // ParseVariableName will have emitted error
     }
 
     const BFFVariable * var = nullptr;
-    const BFFStackFrame * varFrame = ( varParentScope ) ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-                                                        : nullptr;
-    if ( false == varParentScope )
-    {
-        var = BFFStackFrame::GetVar( varName, nullptr );
-    }
+    BFFStackFrame::GetScopeDeclaration( varName, varScope, var );
 
-    if ( ( varParentScope && ( nullptr == varFrame ) ) || ( var == nullptr ) )
+    if ( nullptr == var )
     {
         Error::Error_1009_UnknownVariable( varNameBegin, this, varName );
         return nullptr;

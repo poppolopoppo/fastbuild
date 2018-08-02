@@ -63,9 +63,14 @@ public:
     const BFFVariable * GetLocalVar( const AString & name ) const;
 
     static BFFStackFrame * GetCurrent() { return s_StackHead; }
+    static BFFStackFrame * GetGlobal() { return s_StackTail; }
 
     static BFFStackFrame * GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable );
     static BFFStackFrame * GetParentDeclaration( const AString & name, BFFStackFrame * frame, const BFFVariable *& variable );
+
+    // get a variable in given declaration scope
+    static BFFStackFrame * GetScopeDeclaration( const char * name, BFFVariable::EScope scope, const BFFVariable *& variable );
+    static BFFStackFrame * GetScopeDeclaration( const AString & name, BFFVariable::EScope scope, const BFFVariable *& variable );
 
     BFFStackFrame * GetParent() const { return m_Next; }
 
@@ -88,6 +93,7 @@ private:
 
     // the head of the linked list, from deepest to shallowest
     static BFFStackFrame * s_StackHead;
+    static BFFStackFrame * s_StackTail;
 };
 
 //------------------------------------------------------------------------------

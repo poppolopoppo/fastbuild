@@ -65,12 +65,12 @@ FunctionForEach::FunctionForEach()
 
         const BFFIterator arrayVarNameBegin = pos;
         AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > localName;
-        bool localParentScope = false; // always false thanks to the previous test
-        if ( BFFParser::ParseVariableName( pos, localName, localParentScope ) == false )
+        BFFVariable::EScope localScope = BFFStackFrame::SCOPE_INTERNAL; // always internal thanks to the previous test
+        if ( BFFParser::ParseVariableName( pos, localName, localScope ) == false )
         {
             return false;
         }
-        ASSERT( false == localParentScope );
+        ASSERT( BFFStackFrame::SCOPE_INTERNAL == localScope );
 
         localNames.Append( localName );
 
@@ -85,7 +85,8 @@ FunctionForEach::FunctionForEach()
         pos.SkipWhiteSpace();
 
         if ( *pos != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
-             *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ )
+             *pos != BFFParser::BFF_DECLARE_VAR_PARENT /* tolerant with parent vars */ &&
+             *pos != BFFParser::BFF_DECLARE_VAR_GLOBAL /* tolerant with global vars */ )
         {
             Error::Error_1202_ExpectedVarFollowingIn( pos, this );
             return false;
@@ -93,23 +94,16 @@ FunctionForEach::FunctionForEach()
 
         const BFFIterator arrayNameStart( pos );
         AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > arrayVarName;
-        bool arrayParentScope = false;
-        if ( BFFParser::ParseVariableName( pos, arrayVarName, arrayParentScope ) == false )
+        BFFVariable::EScope arrayVarScope = BFFStackFrame::SCOPE_INTERNAL;
+        if ( BFFParser::ParseVariableName( pos, arrayVarName, arrayVarScope ) == false )
         {
             return false;
         }
 
         const BFFVariable * var = nullptr;
-        BFFStackFrame * const arrayFrame = ( arrayParentScope )
-            ? BFFStackFrame::GetParentDeclaration( arrayVarName, BFFStackFrame::GetCurrent()->GetParent(), var )
-            : nullptr;
+        BFFStackFrame * const arrayFrame = BFFStackFrame::GetScopeDeclaration( arrayVarName, arrayVarScope, var );
 
-        if ( false == arrayParentScope )
-        {
-            var = BFFStackFrame::GetVar( arrayVarName, nullptr );
-        }
-
-        if ( ( arrayParentScope && ( nullptr == arrayFrame ) ) || ( var == nullptr ) )
+        if ( var == nullptr )
         {
             Error::Error_1009_UnknownVariable( arrayNameStart, this, arrayVarName );
             return false;

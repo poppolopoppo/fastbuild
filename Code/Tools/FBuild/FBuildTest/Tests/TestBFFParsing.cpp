@@ -54,6 +54,7 @@ private:
     void ParentScopeBug() const;
     void ParentScopeBug2() const;
     void ParentScopeUnknown() const;
+    void GlobalScope() const;
     void FrozenVariable() const;
     void FrozenVariable_Nested() const;
     void DynamicVarNameConstruction() const;
@@ -111,6 +112,7 @@ REGISTER_TESTS_BEGIN( TestBFFParsing )
     REGISTER_TEST( ParentScopeBug )
     REGISTER_TEST( ParentScopeBug2 )
     REGISTER_TEST( ParentScopeUnknown )
+    REGISTER_TEST( GlobalScope )
     REGISTER_TEST( FrozenVariable )
     REGISTER_TEST( FrozenVariable_Nested )
     REGISTER_TEST( DynamicVarNameConstruction )
@@ -417,6 +419,13 @@ void TestBFFParsing::ParentScopeBug2() const
 void TestBFFParsing::ParentScopeUnknown() const
 {
     Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/parent_scope_unknown.bff", true ); // expect failure
+}
+
+// GlobalScope
+//------------------------------------------------------------------------------
+void TestBFFParsing::GlobalScope() const
+{
+    Parse( "Tools/FBuild/FBuildTest/Data/TestBFFParsing/global_scope.bff" );
 }
 
 // FrozenVariable

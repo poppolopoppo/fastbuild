@@ -5,6 +5,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "BFFIterator.h"
+#include "BFFVariable.h"
 
 #include "Core/Env/Assert.h"
 #include "Core/Env/Types.h"
@@ -40,6 +41,7 @@ public:
     enum { BFF_COMMENT_SLASH = '/' };
     enum { BFF_DECLARE_VAR_INTERNAL = '.' };
     enum { BFF_DECLARE_VAR_PARENT = '^' };
+    enum { BFF_DECLARE_VAR_GLOBAL = '!' };
     enum { BFF_VARIABLE_ASSIGNMENT = '=' };
     enum { BFF_VARIABLE_CONCATENATION = '+' };
     enum { BFF_VARIABLE_SUBTRACTION = '-' };
@@ -58,7 +60,7 @@ public:
     enum { MAX_DIRECTIVE_NAME_LENGTH = 64 };
 
     static bool PerformVariableSubstitutions( const BFFIterator & startIter, const BFFIterator & endIter, AString & value );
-    static bool ParseVariableName( BFFIterator & iter, AString & name, bool & parentScope );
+    static bool ParseVariableName( BFFIterator & iter, AString & name, BFFVariable::EScope & scope );
 
 private:
     bool ParseUnnamedVariableModification( BFFIterator & iter );

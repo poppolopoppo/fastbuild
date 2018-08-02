@@ -62,7 +62,8 @@ FunctionUsing::FunctionUsing()
         // a variable name?
         const char c = *start;
         if ( c != BFFParser::BFF_DECLARE_VAR_INTERNAL &&
-             c != BFFParser::BFF_DECLARE_VAR_PARENT )
+             c != BFFParser::BFF_DECLARE_VAR_PARENT &&
+             c != BFFParser::BFF_DECLARE_VAR_GLOBAL )
         {
             Error::Error_1007_ExpectedVariable( start, this );
             return false;
@@ -75,8 +76,8 @@ FunctionUsing::FunctionUsing()
         // find variable name
         BFFIterator stop( start );
         AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
-        bool parentScope = false;
-        if ( BFFParser::ParseVariableName( stop, varName, parentScope ) == false )
+        BFFVariable::EScope varScope = BFFStackFrame::SCOPE_INTERNAL;
+        if ( BFFParser::ParseVariableName( stop, varName, varScope ) == false )
         {
             return false;
         }
@@ -85,16 +86,9 @@ FunctionUsing::FunctionUsing()
 
         // find variable
         const BFFVariable * v = nullptr;
-        BFFStackFrame * const varFrame = ( parentScope )
-            ? BFFStackFrame::GetParentDeclaration( varName, frame, v )
-            : nullptr;
+        BFFStackFrame::GetScopeDeclaration( varName, varScope, v );
 
-        if ( false == parentScope )
-        {
-            v = BFFStackFrame::GetVar( varName, nullptr );
-        }
-
-        if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == v ) )
+        if ( nullptr == v )
         {
             Error::Error_1009_UnknownVariable( start, this, varName );
             return false;
@@ -115,7 +109,7 @@ FunctionUsing::FunctionUsing()
               ++it )
         {
             const BFFVariable * member = ( *it );
-            if ( ( sameNameMember == nullptr ) && ( parentScope == false ) && ( member->GetName() == v->GetName() ) )
+            if ( ( sameNameMember == nullptr ) && ( varScope != BFFStackFrame::SCOPE_PARENT ) && ( member->GetName() == v->GetName() ) )
             {
                 // We have a struct member with the same name as the struct variable itself.
                 // We have to delay putting it in the current scope because it may delete the struct variable and invalidate members array.

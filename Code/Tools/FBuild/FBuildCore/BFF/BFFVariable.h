@@ -29,6 +29,13 @@ class BFFIterator;
 class BFFVariable
 {
 public:
+    enum EScope
+    {
+        SCOPE_INTERNAL,
+        SCOPE_PARENT,
+        SCOPE_GLOBAL,
+    };
+
     inline const AString & GetName() const { return m_Name; }
 
     const AString & GetString() const { ASSERT( IsString() ); return m_StringValue; }

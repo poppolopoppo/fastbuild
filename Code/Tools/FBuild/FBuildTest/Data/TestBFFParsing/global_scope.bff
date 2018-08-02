@@ -1,0 +1,107 @@
+
+; global scope assignment
+
+!varA = 'foo'
+.varB = 'bar'
+.varC = !varA
+{
+    !varA + .varC
+}
+
+; global scope always accessible
+
+!var = 'first definition'
+{
+    {{{{ !var = 'parent' }}}}
+}
+
+; global scope concatenation
+
+!array = { 'a', 'b', 'c' }
+{
+    !array + 'd'
+}
+
+; global scope unnamed concatenation
+
+!array = { 'a', 'b', 'c' }
+{
+    !array + 'd'
+           + 'e'
+           + 'f'
+}
+
+; array of global scope
+
+!array = {}
+!a = 'a'
+!b = 'b'
+!c = 'c'
+{
+    .array = { !a }
+    .array = { !a, !b, !c }
+    !array = { !a, !b, !c }
+    !array = {!a,!b,!c}
+    !array =
+            {
+            !a
+            ,
+            !b
+            ,
+            !c
+            }
+}
+
+; struct with global scope
+
+!var = 'first definition'
+.struct =
+[
+    .value = !var
+    !var = 'test'
+]
+
+; using struct with global scope
+
+!struct =
+[
+    .value = 42
+]
+{
+    Using( !struct )
+}
+
+; foreach with global scope
+
+!string = ''
+!array = { 'a', 'b', 'c' }
+ForEach( .item in .array )
+{
+    !string + .item
+}
+
+!array = 'no more frozen'
+
+; foreach with global scope array
+
+!string = ''
+!array = { 'a', 'b', 'c' }
+{
+    ForEach( .item in !array )
+    {
+        !string + .item
+    }
+}
+
+; print with global scope
+
+!var = 'test'
+{
+    Print( !var )
+}
+
+; assignment at the end of the file
+
+!varA = 'foo'
+!varB = 'bar'
+!varC = .varA

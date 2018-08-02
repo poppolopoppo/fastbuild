@@ -81,13 +81,14 @@ FunctionPrint::FunctionPrint()
             FLOG_BUILD_DIRECT( tmp.Get() );
         }
         else if ( c == BFFParser::BFF_DECLARE_VAR_INTERNAL ||
-                  c == BFFParser::BFF_DECLARE_VAR_PARENT )
+                  c == BFFParser::BFF_DECLARE_VAR_PARENT ||
+                  c == BFFParser::BFF_DECLARE_VAR_GLOBAL )
         {
             // find end of var name
             BFFIterator stop( start );
             AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
-            bool parentScope = false;
-            if ( BFFParser::ParseVariableName( stop, varName, parentScope ) == false )
+            BFFVariable::EScope varScope = BFFStackFrame::SCOPE_INTERNAL;
+            if ( BFFParser::ParseVariableName( stop, varName, varScope ) == false )
             {
                 return false;
             }
@@ -95,16 +96,9 @@ FunctionPrint::FunctionPrint()
             ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
 
             const BFFVariable * var = nullptr;
-            BFFStackFrame * const varFrame = ( parentScope )
-                ? BFFStackFrame::GetParentDeclaration( varName, BFFStackFrame::GetCurrent()->GetParent(), var )
-                : nullptr;
+            BFFStackFrame::GetScopeDeclaration( varName, varScope, var );
 
-            if ( false == parentScope )
-            {
-                var = BFFStackFrame::GetVar( varName, nullptr );
-            }
-
-            if ( ( parentScope && ( nullptr == varFrame ) ) || ( nullptr == var ) )
+            if ( nullptr == var )
             {
                 Error::Error_1009_UnknownVariable( start, this, varName );
                 return false;

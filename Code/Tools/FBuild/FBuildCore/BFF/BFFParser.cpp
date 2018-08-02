@@ -113,6 +113,7 @@ bool BFFParser::Parse( BFFIterator & iter )
         {
             case BFF_DECLARE_VAR_INTERNAL:
             case BFF_DECLARE_VAR_PARENT:
+            case BFF_DECLARE_VAR_GLOBAL:
             {
                 if ( ParseNamedVariableDeclaration( iter ) == false )
                 {
@@ -175,13 +176,24 @@ bool BFFParser::Parse( BFFIterator & iter )
 
 // ParseNamedVariableName
 //------------------------------------------------------------------------------
-/*static*/ bool BFFParser::ParseVariableName( BFFIterator & iter, AString & name, bool & parentScope )
+/*static*/ bool BFFParser::ParseVariableName( BFFIterator & iter, AString & name, BFFVariable::EScope & variableScope )
 {
-    // skip over the declaration symbol
-    ASSERT( *iter == BFF_DECLARE_VAR_INTERNAL ||
-            *iter == BFF_DECLARE_VAR_PARENT );
-
-    parentScope = ( *iter == BFF_DECLARE_VAR_PARENT );
+    if ( *iter == BFF_DECLARE_VAR_INTERNAL )
+    {
+        variableScope = BFFStackFrame::SCOPE_INTERNAL;
+    }
+    else if ( *iter == BFF_DECLARE_VAR_PARENT )
+    {
+        variableScope = BFFStackFrame::SCOPE_PARENT;
+    }
+    else if ( *iter == BFF_DECLARE_VAR_GLOBAL )
+    {
+        variableScope = BFFStackFrame::SCOPE_GLOBAL;
+    }
+    else
+    {
+        ASSERT( false ); // unexpected declaration symbol
+    }
 
     const BFFIterator varNameStart = iter; // include type token in var name
     iter++;
@@ -264,10 +276,9 @@ bool BFFParser::Parse( BFFIterator & iter )
     }
 
     ASSERT( name.GetLength() > 0 );
-    if ( parentScope )
+    if ( variableScope != BFFStackFrame::SCOPE_INTERNAL )
     {
-        // exchange '^' with '.'
-        ASSERT( BFF_DECLARE_VAR_PARENT == name[0] );
+        // exchange '^|!' with '.'
         name[0] = BFF_DECLARE_VAR_INTERNAL;
     }
 
@@ -297,8 +308,8 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
 {
     const BFFIterator varNameStart( iter );
 
-    bool parentScope = false;
-    if ( ParseVariableName( iter, m_LastVarName, parentScope ) == false )
+    BFFVariable::EScope varScope = BFFStackFrame::SCOPE_INTERNAL;
+    if ( ParseVariableName( iter, m_LastVarName, varScope ) == false )
     {
         return false; // ParseVariableName() would have display an error
     }
@@ -312,12 +323,10 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
     }
 
     // check if points to a previous declaration in a parent scope
-    const BFFVariable * parentVar = nullptr;
-    m_LastVarFrame = ( parentScope )
-        ? BFFStackFrame::GetParentDeclaration( m_LastVarName, nullptr, parentVar )
-        : nullptr;
+    const BFFVariable * var = nullptr;
+    m_LastVarFrame = BFFStackFrame::GetScopeDeclaration( m_LastVarName, varScope, var );
 
-    if ( parentScope )
+    if ( varScope == BFFStackFrame::SCOPE_PARENT )
     {
         // check if a parent definition exists
         if ( nullptr == m_LastVarFrame )
@@ -325,15 +334,13 @@ bool BFFParser::ParseNamedVariableDeclaration( BFFIterator & iter )
             Error::Error_1009_UnknownVariable( varNameStart, nullptr, m_LastVarName );
             return false;
         }
+    }
 
-        ASSERT( nullptr != parentVar );
-
-        // check if the parent definition is frozen
-        if ( parentVar->Frozen() )
-        {
-            Error::Error_1060_CantModifyFrozenVar( varNameStart, nullptr, parentVar );
-            return false;
-        }
+    // check if the previous definition is frozen
+    if ( var && var->Frozen() )
+    {
+        Error::Error_1060_CantModifyFrozenVar( varNameStart, nullptr, var );
+        return false;
     }
 
     return ParseVariableDeclaration( iter, m_LastVarName, m_LastVarFrame );
@@ -483,7 +490,8 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const AString & va
         }
     }
     else if ( *iter == BFF_DECLARE_VAR_INTERNAL ||
-              *iter == BFF_DECLARE_VAR_PARENT )
+              *iter == BFF_DECLARE_VAR_PARENT ||
+              *iter == BFF_DECLARE_VAR_GLOBAL )
     {
         return StoreVariableToVariable( varName, iter, operatorIter, frame );
     }
@@ -1468,24 +1476,34 @@ bool BFFParser::StoreVariableArray( const AString & name,
             iter++; // pass closing quote
         }
         else if ( c == BFF_DECLARE_VAR_INTERNAL ||
-                  c == BFF_DECLARE_VAR_PARENT )
+                  c == BFF_DECLARE_VAR_PARENT ||
+                  c == BFF_DECLARE_VAR_GLOBAL )
         {
             const BFFIterator elementStartValue = iter;
 
             // a variable
             AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
-            bool parentScope = false; // ignored, the behavior is the same
-            if ( ParseVariableName( iter, srcName, parentScope ) == false )
+            BFFVariable::EScope variableScope = BFFStackFrame::SCOPE_INTERNAL; // ignored, the behavior is the same
+            if ( ParseVariableName( iter, srcName, variableScope ) == false )
             {
                 return false;
             }
 
             // Determine stack frame to use for Src var
-            BFFStackFrame * srcFrame = BFFStackFrame::GetCurrent();
-            if ( c == BFF_DECLARE_VAR_PARENT )
+            BFFStackFrame * srcFrame = nullptr;
+            switch ( variableScope )
             {
+            case BFFStackFrame::SCOPE_INTERNAL:
+                srcFrame = BFFStackFrame::GetCurrent();
+                break;
+            case BFFStackFrame::SCOPE_PARENT:
                 srcFrame = BFFStackFrame::GetCurrent()->GetParent();
+                break;
+            case BFFStackFrame::SCOPE_GLOBAL:
+                srcFrame = BFFStackFrame::GetGlobal();
+                break;
             }
+            ASSERT( srcFrame );
 
             // get the variable
             const BFFVariable * varSrc = srcFrame ? srcFrame->GetVariableRecurse( srcName ) : nullptr;
@@ -1688,25 +1706,18 @@ bool BFFParser::StoreVariableToVariable( const AString & dstName, BFFIterator & 
 {
     AStackString< MAX_VARIABLE_NAME_LENGTH > srcName;
 
-    bool srcParentScope = false;
+    BFFVariable::EScope srcScope = BFFStackFrame::SCOPE_INTERNAL;
     const BFFIterator varNameSrcStart( iter ); // Take note of start of var
-    if ( ParseVariableName( iter, srcName, srcParentScope ) == false )
+    if ( ParseVariableName( iter, srcName, srcScope ) == false )
     {
         return false;
     }
 
     // find src var
     const BFFVariable * varSrc = nullptr;
-    BFFStackFrame * const srcFrame = ( srcParentScope )
-        ? BFFStackFrame::GetParentDeclaration( srcName, nullptr, varSrc )
-        : nullptr;
+    BFFStackFrame * const srcFrame = BFFStackFrame::GetScopeDeclaration( srcName, srcScope, varSrc );
 
-    if ( !srcParentScope )
-    {
-        varSrc = BFFStackFrame::GetVar( srcName, nullptr );
-    }
-
-    if ( ( srcParentScope && nullptr == srcFrame ) || ( nullptr == varSrc ) )
+    if ( nullptr == varSrc )
     {
         Error::Error_1009_UnknownVariable( varNameSrcStart, nullptr, srcName );
         return false;

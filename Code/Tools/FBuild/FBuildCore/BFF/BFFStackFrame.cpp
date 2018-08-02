@@ -12,6 +12,7 @@
 
 //
 /*static*/ BFFStackFrame * BFFStackFrame::s_StackHead = nullptr;
+/*static*/ BFFStackFrame * BFFStackFrame::s_StackTail = nullptr;
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -19,7 +20,16 @@ BFFStackFrame::BFFStackFrame()
 : m_Variables( 32, true )
 {
     // hook into top of stack chain
-    m_Next = s_StackHead;
+    if ( nullptr == s_StackHead )
+    {
+        m_Next = nullptr;
+        s_StackTail = this;
+    }
+    else
+    {
+        m_Next = s_StackHead;
+    }
+
     s_StackHead = this;
 }
 
@@ -30,6 +40,13 @@ BFFStackFrame::~BFFStackFrame()
     // unhook from top of stack chain
     ASSERT( s_StackHead == this );
     s_StackHead = m_Next;
+
+    if ( this == s_StackTail )
+    {
+        ASSERT( nullptr == m_Next );
+
+        s_StackTail = nullptr;
+    }
 
     // free all variables we own
     Array< BFFVariable * >::Iter i = m_Variables.Begin();
@@ -269,6 +286,20 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
     return GetVarNoRecurse( name );
 }
 
+// GetGlobal
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetGlobal()
+{
+    BFFStackFrame* frame = GetCurrent();
+
+    while ( frame && frame->GetParent() )
+    {
+        frame = frame->GetParent();
+    }
+
+    return frame;
+}
+
 // GetParentDeclaration
 //------------------------------------------------------------------------------
 /*static*/ BFFStackFrame * BFFStackFrame::GetParentDeclaration( const char * name, BFFStackFrame * frame, const BFFVariable *& variable )
@@ -299,6 +330,44 @@ const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
 
     ASSERT( nullptr == variable );
     return nullptr;
+}
+
+// GetScopeDeclaration
+//------------------------------------------------------------------------------
+/*static**/ BFFStackFrame * BFFStackFrame::GetScopeDeclaration( const char * name, BFFVariable::EScope scope, const BFFVariable *& variable )
+{
+    AStackString<> strName( name );
+    return GetScopeDeclaration( strName, scope, variable );
+}
+
+// GetScopeDeclaration
+//------------------------------------------------------------------------------
+/*static*/ BFFStackFrame * BFFStackFrame::GetScopeDeclaration( const AString & name, BFFVariable::EScope scope, const BFFVariable *& variable )
+{
+    BFFStackFrame * frame = nullptr;
+    switch ( scope )
+    {
+    case SCOPE_INTERNAL:
+        variable = GetVar( name, nullptr );
+        break;
+    case SCOPE_PARENT:
+        frame = GetParentDeclaration( name, GetCurrent()->GetParent(), variable );
+        break;
+    case SCOPE_GLOBAL:
+        frame = GetGlobal();
+
+        ASSERT( nullptr != frame );
+
+        variable = GetVar( name, frame );
+        break;
+    default:
+        ASSERT( false ); // unexpected variable scope
+
+        variable = nullptr;
+        break;
+    }
+
+    return frame;
 }
 
 // GetVarAny
