@@ -109,11 +109,20 @@ void Free( void * ptr )
     void operator delete( void * ptr, const char *, int ) { Free( ptr ); }
     void operator delete[]( void * ptr, const char *, int ) { Free( ptr ); }
 #endif
-#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !defined( __SANITIZE_ADDRESS__ )
+#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__SANITIZE_ADDRESS__
+#ifndef _MSC_VER
 void * operator new( size_t size ) { return Alloc( size ); }
 void * operator new[]( size_t size ) { return Alloc( size ); }
 void operator delete( void * ptr ) NOEXCEPT { Free( ptr ); }
 void operator delete[]( void * ptr ) NOEXCEPT { Free( ptr ); }
+#else
+_Ret_notnull_ _Post_writable_byte_size_(size)
+_VCRT_ALLOCATOR void* __CRTDECL operator new( size_t size ) { return Alloc( size ); }
+_Ret_notnull_ _Post_writable_byte_size_(size)
+_VCRT_ALLOCATOR void* __CRTDECL operator new[]( size_t size ) { return Alloc( size ); }
+void __CRTDECL operator delete( void * ptr ) NOEXCEPT { Free( ptr ); }
+void __CRTDECL operator delete[]( void * ptr ) NOEXCEPT { Free( ptr ); }
+#endif
 #endif
 
 //------------------------------------------------------------------------------

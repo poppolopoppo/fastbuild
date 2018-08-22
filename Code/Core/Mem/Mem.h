@@ -10,10 +10,14 @@
 // Placement new/delete
 //------------------------------------------------------------------------------
 #define INPLACE_NEW new
+#if 0
 inline void * operator new( size_t, void * ptr ) { return ptr; }
 inline void * operator new[]( size_t, void * ptr ) { return ptr; }
 inline void operator delete( void *, void * ) {}
 inline void operator delete[]( void *, void * ) {}
+#else
+#include <new.h>
+#endif
 
 // new/delete
 //------------------------------------------------------------------------------
@@ -54,11 +58,13 @@ void Free( void * ptr );
 #if !defined( __has_feature )
     #define __has_feature( ... ) 0
 #endif
-#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !defined( __SANITIZE_ADDRESS__ )
+#if !__has_feature( address_sanitizer ) && !__has_feature( memory_sanitizer ) && !__SANITIZE_ADDRESS__
+#ifndef _MSC_VER
 void * operator new( size_t size );
 void * operator new[]( size_t size );
 void operator delete( void * ptr ) NOEXCEPT;
 void operator delete[]( void * ptr ) NOEXCEPT;
+#endif
 #endif
 
 //------------------------------------------------------------------------------
