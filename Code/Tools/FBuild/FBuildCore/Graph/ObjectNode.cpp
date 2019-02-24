@@ -2599,7 +2599,9 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
 //------------------------------------------------------------------------------
 bool ObjectNode::ShouldUseDeoptimization() const
 {
-    if ( GetFlag( FLAG_UNITY ) )
+    if ( ( GetFlag( FLAG_UNITY ) ) &&
+         ( m_DeoptimizeWritableFilesWithToken == false ) &&
+         ( GetFlag( FLAG_ISOLATED_FROM_UNITY ) == false ) )
     {
         return false; // disabled for Unity files (which are always writable)
     }
@@ -2613,30 +2615,31 @@ bool ObjectNode::ShouldUseDeoptimization() const
     // Neither flag should be set for the creation of Precompiled Headers
     ASSERT( GetFlag( FLAG_CREATING_PCH ) == false );
 
-    if ( FileIO::GetReadOnly( GetSourceFile()->GetName() ) )
-    {
-        return false; // file is read only (not modified)
-    }
-
     if ( m_DeoptimizeWritableFiles )
     {
-        return true; // file modified - deoptimize with or without token
+        if ( ! FileIO::GetReadOnly( GetSourceFile()->GetName() ) )
+        {
+            return true; // file modified - deoptimize with or without token
+        }
     }
 
-    // does file contain token?
-    FileStream fs;
-    if ( fs.Open( GetSourceFile()->GetName().Get(), FileStream::READ_ONLY ) )
+    if ( m_DeoptimizeWritableFilesWithToken )
     {
-        const size_t bytesToRead = Math::Min< size_t >( 1024, (size_t)fs.GetFileSize() );
-        char buffer[ 1025 ];
-        if ( fs.Read( buffer, bytesToRead ) == bytesToRead )
+        // does file contain token?
+        FileStream fs;
+        if ( fs.Open( GetSourceFile()->GetName().Get(), FileStream::READ_ONLY ) )
         {
-            buffer[ bytesToRead ] = 0;
-            if ( strstr( buffer, "FASTBUILD_DEOPTIMIZE_OBJECT" ) )
+            const size_t bytesToRead = Math::Min< size_t >( 1024, (size_t)fs.GetFileSize() );
+            char buffer[ 1025 ];
+            if ( fs.Read( buffer, bytesToRead ) == bytesToRead )
             {
-                return true;
+                buffer[ bytesToRead ] = 0;
+                if ( strstr( buffer, "FASTBUILD_DEOPTIMIZE_OBJECT" ) )
+                {
+                    return true;
+                }
+                return false; // token not present
             }
-            return false; // token not present
         }
     }
 
