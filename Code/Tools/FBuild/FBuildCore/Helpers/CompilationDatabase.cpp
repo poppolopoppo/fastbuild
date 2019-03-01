@@ -3,8 +3,6 @@
 
 // Includes
 //------------------------------------------------------------------------------
-#include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
-
 #include "CompilationDatabase.h"
 
 #include "Tools/FBuild/FBuildCore/FBuild.h"
