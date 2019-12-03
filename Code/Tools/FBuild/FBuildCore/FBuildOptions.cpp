@@ -13,6 +13,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/xxHash.h"
+#include "Core/Mem/SystemMemory.h"
 #include "Core/Tracing/Tracing.h"
 
 // system
@@ -201,6 +202,24 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            else if ( thisArg.BeginsWith( "-m" ) &&
+                      sscanf( thisArg.Get(), "-m%u", &m_MinPercentMemoryAvailable ) == 1 ) // TODO:C Consider using sscanf_s
+            PRAGMA_DISABLE_POP_MSVC // 4996
+            {
+                // only accept within sensible range
+                if ( m_MinPercentMemoryAvailable <= 100 )
+                {
+                    continue;
+                }
+            }
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
+            else if ( thisArg.BeginsWith( "-r" ) &&
+                      sscanf( thisArg.Get(), "-r%u", &m_MemoryNeededPerWorker ) == 1 ) // TODO:C Consider using sscanf_s
+            PRAGMA_DISABLE_POP_MSVC // 4996
+            {
+                continue;
+            }
+            PRAGMA_DISABLE_PUSH_MSVC( 4996 ) // This function or variable may be unsafe...
             else if ( thisArg.BeginsWith( "-j" ) &&
                       sscanf( thisArg.Get(), "-j%u", &m_NumWorkerThreads ) == 1 ) // TODO:C Consider using sscanf_s
             PRAGMA_DISABLE_POP_MSVC // 4996
@@ -384,6 +403,51 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
         }
     }
 
+    // Clamp number of workers according to total system memory
+    if ( m_MinPercentMemoryAvailable )
+    {
+        size_t systemFree, systemTotal;
+        GetSystemMemorySize( &systemFree, &systemTotal );
+
+        if ( systemTotal > 0 )
+        {
+            int64_t systemUsable = int64_t( systemFree );
+            systemUsable -= ( ( systemTotal * m_MinPercentMemoryAvailable ) / 100 ); // user reserve
+
+            if ( systemUsable < 0 )
+            {
+                systemUsable = 0;
+            }
+
+            const int64_t estimatedMemoryPerWorker = int64_t( m_MemoryNeededPerWorker ) << 20; // bytes
+            uint32_t numWorkersUsable = uint32_t( systemUsable / estimatedMemoryPerWorker );
+
+            if ( numWorkersUsable == 0 ) // can't have 0 workers
+            {
+                numWorkersUsable = 1;
+            }
+
+            if ( m_NumWorkerThreads > numWorkersUsable )
+            {
+
+                FLOG_WARN(
+                    "Use %u worker threads instead of %u to limit memory usage:\n"
+                    " - System memory available %u / %u mb,\n"
+                    " - Should leave at least %u%% of RAM available,\n"
+                    " - Around %u mb needed per worker thread,\n"
+                    "   -> But worker threads can only use %u mb for local jobs.",
+                    numWorkersUsable, m_NumWorkerThreads,
+                    (uint32_t)( systemFree >> 20 ), 
+                    (uint32_t)( systemTotal >> 20 ),
+                    m_MinPercentMemoryAvailable,
+                    (uint32_t)( estimatedMemoryPerWorker >> 20 ),
+                    (uint32_t)( systemUsable >> 20 ) );
+
+                m_NumWorkerThreads = numWorkersUsable;
+            }
+        }
+    }
+
     // Global mutex names depend on workingDir which is managed by FBuildOptions
     m_ProgramName = programName;
 
@@ -503,6 +567,10 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             " -ide           Enable multiple options when building from an IDE.\n"
             "                Enables: -noprogress, -fixuperrorpaths &\n"
             "                -wrapper (Windows)\n"
+            " -m[x]          Explicitly set minimum percentage of memory available to X,\n"
+            "                instead of default 10%% threshold.\n"
+            " -r[x]          Explicitly set needed memory per worker to Xmb,\n"
+            "                instead of default 1000mb reserve.\n"
             " -j[x]          Explicitly set LOCAL worker thread count X, instead of\n"
             "                default of hardware thread count.\n"
             " -monitor       Emit a machine-readable file while building.\n"
