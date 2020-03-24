@@ -895,7 +895,9 @@ void LinkerNode::EmitCompilationMessage( const Args & fullArgs ) const
     }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
+        output += '"';
         output += m_Linker;
+        output += '"';
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';
@@ -919,7 +921,9 @@ void LinkerNode::EmitStampMessage() const
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
         const Node * linkerStampExe = m_StaticDependencies.End()[ -1 ].GetNode();
+        output += '"';
         output += linkerStampExe->GetName();
+        output += '"';
         output += ' ';
         output += m_LinkerStampExeArgs;
         output += '\n';

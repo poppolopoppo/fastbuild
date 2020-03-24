@@ -398,7 +398,9 @@ void LibraryNode::EmitCompilationMessage( const Args & fullArgs ) const
     }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
+        output += '"';
         output += m_Librarian;
+        output += '"';
         output += ' ';
         output += fullArgs.GetRawArgs();
         output += '\n';

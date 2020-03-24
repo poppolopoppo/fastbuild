@@ -265,7 +265,9 @@ void TestNode::EmitCompilationMessage( const char * workingDir ) const
     }
     if ( FBuild::Get().GetOptions().m_ShowCommandLines )
     {
+        output += '"';
         output += GetTestExecutable()->GetName();
+        output += '"';
         output += ' ';
         output += m_TestArguments;
         output += '\n';
