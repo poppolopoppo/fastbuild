@@ -311,7 +311,7 @@ LinkerNode::~LinkerNode()
             {
                 if ( memOut.Get() )
                 {
-                    Node::DumpOutput( job, memOut.Get(), memOutSize );
+                    Node::DumpOutput( job, memOut );
                 }
 
                 if ( memErr.Get() )
