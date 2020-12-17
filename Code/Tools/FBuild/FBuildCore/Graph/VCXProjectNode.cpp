@@ -262,6 +262,11 @@ VCXProjectNode::~VCXProjectNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult VCXProjectNode::DoBuild( Job * /*job*/ )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+    
     VSProjectGenerator pg;
     pg.SetBasePaths( m_ProjectBasePaths );
 

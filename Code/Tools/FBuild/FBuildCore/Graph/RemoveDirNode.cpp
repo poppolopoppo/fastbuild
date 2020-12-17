@@ -84,6 +84,11 @@ RemoveDirNode::~RemoveDirNode() = default;
 {
     ASSERT( !m_StaticDependencies.IsEmpty() );
 
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+
     // Iterate all the DirectoryListNodes
     for ( const Dependency & dep : m_StaticDependencies )
     {

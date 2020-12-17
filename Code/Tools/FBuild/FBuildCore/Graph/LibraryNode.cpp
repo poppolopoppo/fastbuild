@@ -144,6 +144,11 @@ LibraryNode::~LibraryNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LibraryNode::DoBuild( Job * job )
 {
+	if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+
     // Delete library from previous build (if present) if:
     // - A clean build is being triggered
     // - A non-msvc librarian is used (librarians like ar can cause duplicate

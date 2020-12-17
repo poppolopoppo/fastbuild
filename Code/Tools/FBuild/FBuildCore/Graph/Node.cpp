@@ -236,6 +236,13 @@ bool Node::DetermineNeedToBuild( const Dependencies & deps ) const
 //------------------------------------------------------------------------------
 /*virtual*/ bool Node::Finalize( NodeGraph & )
 {
+    // when building when -preprocess option the node should be invalidated
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        m_Stamp = 0;
+        return true;
+    }
+
     // Stamp static and dynamic dependencies (prebuild deps don't need stamping
     // as they are never trigger builds)
     Dependencies * allDeps[2] = { &m_StaticDependencies, &m_DynamicDependencies };

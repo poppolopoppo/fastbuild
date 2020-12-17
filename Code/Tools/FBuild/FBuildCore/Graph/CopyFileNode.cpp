@@ -57,6 +57,11 @@ CopyFileNode::~CopyFileNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CopyFileNode::DoBuild( Job * /*job*/ )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+    
     EmitCopyMessage();
 
     // copy the file

@@ -759,7 +759,7 @@ void JobQueue::FinishedProcessingJob( Job * job, bool success, bool wasARemoteJo
             if ( node->GetType() != Node::FILE_NODE )
             {
                 // ... ensure file exists (to detect builder logic problems)
-                if ( !FileIO::FileExists( node->GetName().Get() ) )
+                if ( !FBuild::Get().GetOptions().m_PreprocessOnly && !FileIO::FileExists( node->GetName().Get() ) )
                 {
                     FLOG_ERROR( "File missing despite success for '%s'", node->GetName().Get() );
                     result = Node::NODE_RESULT_FAILED;
