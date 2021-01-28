@@ -67,6 +67,7 @@ protected:
     ArgsResponseFileMode GetResponseFileMode() const;
 
     void GetImportLibName( const AString & args, AString & importLibName ) const;
+    static void GetEmbedNatvisFiles( const AString & args, Array< AString > & paths );
 
     static bool GetOtherLibraries( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, const AString & args, Dependencies & otherLibraries, bool msvc );
     static bool GetOtherLibrary( NodeGraph & nodeGraph, const BFFToken * iter, const Function * function, Dependencies & libs, const AString & path, const AString & lib, bool & found );
