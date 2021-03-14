@@ -150,6 +150,11 @@ XCodeProjectNode::~XCodeProjectNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult XCodeProjectNode::DoBuild( Job * )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+    
     // Generate project.pbxproj file
     XCodeProjectGenerator g;
 

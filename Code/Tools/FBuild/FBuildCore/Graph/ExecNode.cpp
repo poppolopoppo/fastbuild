@@ -172,6 +172,11 @@ ExecNode::~ExecNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ExecNode::DoBuild( Job * job )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+    
     // If the workingDir is empty, use the current dir for the process
     const char * workingDir = m_ExecWorkingDir.IsEmpty() ? nullptr : m_ExecWorkingDir.Get();
 

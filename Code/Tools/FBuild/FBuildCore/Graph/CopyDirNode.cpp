@@ -179,6 +179,11 @@ CopyDirNode::~CopyDirNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CopyDirNode::DoBuild( Job * /*job*/ )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+
     if (m_DynamicDependencies.IsEmpty())
     {
         m_Stamp = 1; // Non-zero

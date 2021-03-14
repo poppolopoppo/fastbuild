@@ -326,6 +326,11 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 m_Profile = true;
                 continue;
             }
+            else if ( thisArg == "-preprocess")
+            {
+                m_PreprocessOnly = true;
+                continue;
+            }
             else if ( thisArg == "-progress" )
             {
                 m_ShowProgress = true;
@@ -400,21 +405,21 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 continue;
             }
             #if defined( __WINDOWS__ )
-                else if ( thisArg == "-wrapper")
-                {
+            else if ( thisArg == "-wrapper")
+            {
                     m_WrapperMode = WRAPPER_MODE_MAIN_PROCESS;
-                    continue;
-                }
-                else if ( thisArg == "-wrapperintermediate") // Internal use only
-                {
+                continue;
+            }
+            else if ( thisArg == "-wrapperintermediate") // Internal use only
+            {
                     m_WrapperMode = WRAPPER_MODE_INTERMEDIATE_PROCESS;
-                    continue;
-                }
-                else if ( thisArg == "-wrapperfinal") // Internal use only
-                {
+                continue;
+            }
+            else if ( thisArg == "-wrapperfinal") // Internal use only
+            {
                     m_WrapperMode = WRAPPER_MODE_FINAL_PROCESS;
-                    continue;
-                }
+                continue;
+            }
             #endif
 
             // can't use FLOG_ERROR as FLog is not initialized
@@ -473,6 +478,12 @@ FBuildOptions::OptionsResult FBuildOptions::ProcessCommandLine( int argc, char *
                 return OPTIONS_ERROR;
             }
         }
+    }
+
+    // Disable distributed compilation when using '-preprocessonly'
+    if ( m_PreprocessOnly )
+    {
+        m_AllowDistributed = false;
     }
 
     // Global mutex names depend on workingDir which is managed by FBuildOptions
@@ -581,44 +592,45 @@ void FBuildOptions::DisplayHelp( const AString & programName ) const
             "                   - <= -1 : less compression, with -128 being the lowest\n"
             "                   - ==  0 : disable compression\n"
             "                   - >=  1 : more compression, with 12 being the highest\n"
-            " -cacheinfo        Output cache statistics.\n"
+            " -cacheinfo     Output cache statistics.\n"
             " -cachetrim <size> Trim the cache to the given size in MiB.\n"
-            " -cacheverbose     Emit details about cache interactions.\n"
-            " -clean            Force a clean build.\n"
+            " -cacheverbose  Emit details about cache interactions.\n"
+            " -clean         Force a clean build.\n"
             " -compdb           Generate JSON compilation database for targets.\n"
             " -config <path>    Explicitly specify the config file to use.\n"
             " -continueafterdbmove\n"
             "       Allow builds after a DB move.\n"
             " -debug            (Windows) Break at startup, to attach debugger.\n"
             " -dist             Allow distributed compilation.\n"
-            " -distverbose      Print detailed info for distributed compilation.\n"
+            " -distverbose   Print detailed info for distributed compilation.\n"
             " -dot[full]        Emit known dependency tree info for specified targets to an\n"
             "                   fbuild.gv file in DOT format.\n"
-            " -fixuperrorpaths  Reformat error paths to be Visual Studio friendly.\n"
-            " -forceremote      Force distributable jobs to only be built remotely.\n"
-            " -help             Show this help.\n"
-            " -ide              Enable multiple options when building from an IDE.\n"
-            "                   Enables: -noprogress, -fixuperrorpaths &\n"
-            "                   -wrapper (Windows)\n"
+            " -fixuperrorpaths Reformat error paths to be Visual Studio friendly.\n"
+            " -forceremote   Force distributable jobs to only be built remotely.\n"
+            " -help          Show this help.\n"
+            " -ide           Enable multiple options when building from an IDE.\n"
+            "                Enables: -noprogress, -fixuperrorpaths &\n"
+            "                -wrapper (Windows)\n"
             " -j<x>             Explicitly set LOCAL worker thread count X, instead of\n"
             "                   default of hardware thread count.\n"
             " -monitor          Emit a machine-readable file while building.\n"
             " -nofastcancel     Disable aborting other tasks as soon any task fails.\n"
             " -nolocalrace      Disable local race of remotely started jobs.\n"
-            " -noprogress       Don't show the progress bar while building.\n"
+            " -noprogress    Don't show the progress bar while building.\n"
             " -nounity          (Experimental) Build files individually, ignoring Unity.\n"
             " -nostoponerror    On error, favor building as much as possible.\n"
             " -nosummaryonerror Hide the summary if the build fails. Implies -summary.\n"
             " -profile          Output an fbuild_profiling.json describing the build.\n"
+            " -preprocess    Run preprocessor only, will populate target dependencies without compiling.\n"
             " -progress         Show build progress bar even if stdout is redirected.\n"
-            " -quiet            Don't show build output.\n"
+            " -quiet         Don't show build output.\n"
             " -report           Ouput report.html at build end. (Increases build time)\n"
-            " -showcmds         Show command lines used to launch external processes.\n"
+            " -showcmds      Show command lines used to launch external processes.\n"
             " -showcmdoutput    Show output of external processes.\n"
-            " -showdeps         Show known dependency tree for specified targets.\n"
+            " -showdeps      Show known dependency tree for specified targets.\n"
             " -showtargets      Display primary targets, excluding those marked \"Hidden\".\n"
             " -showalltargets   Display primary targets, including those marked \"Hidden\".\n"
-            " -summary          Show a summary at the end of the build.\n"
+            " -summary       Show a summary at the end of the build.\n"
             " -verbose          Show detailed diagnostic info. (Increases built time)\n"
             " -version          Print version and exit.\n"
             " -vs               VisualStudio mode. Same as -ide.\n"

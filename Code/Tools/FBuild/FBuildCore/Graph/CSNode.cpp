@@ -171,6 +171,11 @@ CSNode::~CSNode() = default;
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult CSNode::DoBuild( Job * job )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+    
     // Format compiler args string
     Args fullArgs;
     if ( !BuildArgs( fullArgs ) )

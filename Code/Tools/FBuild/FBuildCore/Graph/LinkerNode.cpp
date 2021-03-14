@@ -182,6 +182,11 @@ LinkerNode::~LinkerNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult LinkerNode::DoBuild( Job * job )
 {
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        return Node::NODE_RESULT_OK;
+    }
+
     if ( DoPreLinkCleanup() == false )
     {
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error

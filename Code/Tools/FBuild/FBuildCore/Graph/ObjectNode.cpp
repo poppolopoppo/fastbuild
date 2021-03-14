@@ -225,6 +225,23 @@ ObjectNode::~ObjectNode()
         usePreProcessor = true;
         useDeoptimization = false; // disable deoptimization
     }
+    if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        usePreProcessor = false;
+        if ( GetDedicatedPreprocessor() != nullptr )
+        {
+            usePreProcessor = ( GetPreprocessorFlag( FLAG_MSVC ) || GetPreprocessorFlag( FLAG_GCC ) || GetPreprocessorFlag( FLAG_SNC ) || GetPreprocessorFlag( FLAG_CLANG ) || GetPreprocessorFlag( CODEWARRIOR_WII ) || GetPreprocessorFlag( GREENHILLS_WIIU ) );
+        }
+        else
+        {
+            usePreProcessor = ( GetFlag( FLAG_MSVC ) || GetFlag( FLAG_GCC ) || GetFlag( FLAG_SNC ) || GetFlag( FLAG_CLANG ) || GetFlag( CODEWARRIOR_WII ) || GetFlag( GREENHILLS_WIIU ) );
+        }
+
+        if ( false == usePreProcessor )
+        {
+            return Node::NODE_RESULT_OK;
+        }
+    }
 
     // Graphing the current amount of distributable jobs
     FLOG_MONITOR( "GRAPH FASTBuild \"Distributable Jobs MemUsage\" MB %f\n", (double)( (float)Job::GetTotalLocalDataMemoryUsage() / (float)MEGABYTE ) );
@@ -399,6 +416,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         return NODE_RESULT_FAILED; // BuildArgs will have emitted an error
     }
 
+	if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+    {
+        pass = PASS_PREPROCESSOR_ONLY;
+    }
+
     // Try to use the light cache if enabled
     if ( useCache && GetCompiler()->GetUseLightCache() )
     {
@@ -456,6 +478,11 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
         if ( ProcessIncludesWithPreProcessor( job ) == false )
         {
             return NODE_RESULT_FAILED; // ProcessIncludesWithPreProcessor will have emitted an error
+        }
+
+        if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+        {
+            return Node::NODE_RESULT_OK;
         }
     }
 
@@ -1550,7 +1577,14 @@ void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimi
     AStackString<> output;
     if ( FBuild::IsValid()  && FBuild::Get().GetOptions().m_ShowCommandSummary )
     {
-        output += "Obj: ";
+		if ( FBuild::Get().GetOptions().m_PreprocessOnly )
+	    {
+        	output += "PP: ";
+	    }
+    	else
+	    {
+        	output += "Obj: ";
+    	}
         if ( useDeoptimization )
         {
             output += "**Deoptimized** ";

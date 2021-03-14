@@ -61,6 +61,7 @@ public:
     bool        m_GenerateDotGraphFull              = false;
     bool        m_GenerateCompilationDatabase       = false;
     bool        m_NoUnity                           = false;
+    bool        m_PreprocessOnly                    = false;
 
     // Cache
     bool        m_UseCacheRead                      = false;
