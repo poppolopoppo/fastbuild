@@ -104,6 +104,7 @@ protected:
     bool                m_LinkerLinkObjects             = false;
     bool                m_LinkerAllowResponseFile;
     bool                m_LinkerForceResponseFile;    
+    bool                m_LinkerVerboseOutput           = false;
     AString             m_LinkerStampExe;
     AString             m_LinkerStampExeArgs;
     Array< AString >    m_PreBuildDependencyNames;

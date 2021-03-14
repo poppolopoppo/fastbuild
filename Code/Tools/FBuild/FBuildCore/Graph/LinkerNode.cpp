@@ -43,6 +43,7 @@ REFLECT_NODE_BEGIN( LinkerNode, Node, MetaName( "LinkerOutput" ) + MetaFile() )
     REFLECT( m_LinkerStampExeArgs,              "LinkerStampExeArgs",           MetaOptional() )
     REFLECT_ARRAY( m_PreBuildDependencyNames,   "PreBuildDependencies",         MetaOptional() + MetaFile() + MetaAllowNonFile() )
     REFLECT_ARRAY( m_Environment,               "Environment",                  MetaOptional() )
+    REFLECT( m_LinkerVerboseOutput,             "LinkerVerboseOutput",          MetaOptional() )
 
     // Internal State
     REFLECT( m_Libraries2StartIndex,            "Libraries2StartIndex",         MetaHidden() )
@@ -330,6 +331,21 @@ LinkerNode::~LinkerNode()
                     HandleWarningsMSVC( job, GetName(), memOut );
                 }
             }
+
+            // Always print linker ouput if m_LinkerVerboseOutput is enabled
+            if ( m_LinkerVerboseOutput )
+            {
+                if ( memOut.Get() )
+                {
+                    Node::DumpOutput( job, memOut );
+                }
+
+                if ( memErr.Get() )
+                {
+                    job->ErrorPreformatted( memErr.Get() );
+                }
+            }
+
             break; // success!
         }
     }
