@@ -65,8 +65,26 @@ void VSProjectGenerator::AddFile( const AString & file )
     // ensure slash consistency which we rely on later
     AStackString<> fileCopy( file );
     fileCopy.Replace( FORWARD_SLASH, BACK_SLASH );
-    m_Files.EmplaceBack();
-    m_Files.Top().m_AbsolutePath = fileCopy;
+
+    // don't add twice the same file (there can be overlaps when adding explicit files)
+    // and visual studio has a bug making property page and projects not workings when
+    // they contain doublons :
+    // https://developercommunity.visualstudio.com/content/problem/94350/there-are-no-property-pages-for-the-selection-in-v.html
+    bool AlreadyExists = false ;
+    for ( uint32_t i = 0 ; i < m_Files.GetSize() ; ++i )
+    {
+        if ( m_Files[i].m_AbsolutePath == fileCopy )
+        {
+            AlreadyExists = true;
+            break;
+        }
+    }
+
+    if ( !AlreadyExists )
+    {
+        m_Files.EmplaceBack();
+        m_Files.Top().m_AbsolutePath = fileCopy;
+    }
 }
 
 // AddFiles
