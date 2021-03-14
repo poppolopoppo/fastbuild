@@ -90,6 +90,22 @@ LinkerNode::LinkerNode()
         GetImportLibName( m_LinkerOptions, m_ImportLibName );
     }
 
+    // Check for embeded Natvis file override
+    Dependencies linkerNatvis;
+    if ( ( m_Flags & LinkerNode::LINK_FLAG_MSVC ) != 0 )
+    {
+        Array< AString > paths;
+        GetEmbedNatvisFiles( m_LinkerOptions, paths );
+
+        for ( const AString & natvis : paths )
+        {
+            if ( DependOnNode( nodeGraph, iter, function, natvis, linkerNatvis ) == false )
+            {
+                return false; // DependOnNode will have emitted an error
+            }
+        }
+    }
+
     // Check input/output args for Linker
     {
         bool hasInputToken = ( m_LinkerOptions.Find( "%1" ) || m_LinkerOptions.Find( "\"%1\"" ) );
@@ -168,6 +184,7 @@ LinkerNode::LinkerNode()
     m_AssemblyResourcesNum = (uint32_t)assemblyResources.GetSize();
     m_StaticDependencies.Append( otherLibraryNodes );
     m_StaticDependencies.Append( linkerStampExe );
+    m_StaticDependencies.Append( linkerNatvis );
 
     return true;
 }
@@ -1082,6 +1099,42 @@ void LinkerNode::GetImportLibName( const AString & args, AString & importLibName
             }
 
             Args::StripQuotes( impStart, impEnd, importLibName );
+        }
+    }
+}
+
+// GetEmbedNatvisFiles
+//------------------------------------------------------------------------------
+/*static*/ void LinkerNode::GetEmbedNatvisFiles( const AString & args, Array< AString > & paths )
+{
+    // split to individual tokens
+    Array< AString > tokens;
+    args.Tokenize( tokens );
+
+    const AString * const end = tokens.End();
+
+    for ( const AString * it = tokens.Begin(); it != end; ++it )
+    {
+        if ( LinkerNode::IsStartOfLinkerArg_MSVC( *it, "NATVIS:" ) )
+        {
+            const char * impStart = it->Get() + 8;
+            const char * impEnd = it->GetEnd();
+
+            // if token is exactly /IMPLIB: then value is next token
+            if ( impStart == impEnd )
+            {
+                ++it;
+                // handle missing next value
+                if ( it == end )
+                {
+                    return; // we just pretend it doesn't exist and let the linker complain
+                }
+
+                impStart = it->Get();
+                impEnd = it->GetEnd();
+            }
+
+            Args::StripQuotes( impStart, impEnd, paths.EmplaceBack() );
         }
     }
 }
