@@ -810,13 +810,23 @@ void Node::ReplaceDummyName( const AString & newName )
         // find the limits of the current line
         const char * lineStart = data;
         const char * lineEnd = lineStart;
+        const char * lineNext = lineStart;
         while ( lineEnd < end )
         {
+            // crlf
+            if ( ( *lineEnd == '\r' ) && ( ( lineEnd + 1 < end ) && ( lineEnd[1] == '\n' ) ) )
+            {
+                lineNext = ( lineEnd + 2 );
+                break;
+            }
+            // cr or lf
             if ( ( *lineEnd == '\r' ) || ( *lineEnd == '\n' ) )
             {
+                lineNext = ( lineEnd + 1 );
                 break;
             }
             lineEnd++;
+            lineNext++;
         }
         if ( lineStart != lineEnd ) // ignore empty
         {
@@ -858,7 +868,7 @@ void Node::ReplaceDummyName( const AString & newName )
                 buffer += copy;
             }
         }
-        data = ( lineEnd + 1 );
+        data = lineNext;
     }
 
     if ( job == nullptr )
